@@ -1,5 +1,5 @@
 from extensions.base import BaseTool
-from contexts_result import ToolResult
+from contexts import ToolResult
 
 class ReadTool(BaseTool):
   name = "read"
@@ -7,6 +7,11 @@ class ReadTool(BaseTool):
   parameters = {
     "file_path": "읽을 파일 경로"
   }
+  observation = """
+  파일 내용 확보 완료.
+  현재 상태에 파일 내용이 저장되어 있다.
+  추가 작업(요약, 번역, 저장 등)이 필요하다면 확보한 내용을 활용한다.
+  """
 
   def run(self, file_path):
     try:
@@ -16,7 +21,8 @@ class ReadTool(BaseTool):
         name=self.name,
         parameters={"file_path": file_path},
         success=True,
-        content=result
+        content=result,
+        observation=self.observation
       )
     except Exception as e:
       return ToolResult(

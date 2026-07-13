@@ -1,12 +1,12 @@
 from llm import ask
 from prompts import summary_prompt
 from planner import Planner
-from contexts_result import Message
+from contexts import Message
 
 contexts = []
 planner = Planner()
 
-def run(user_input: str):
+def run(user_input: str) -> str:
   contexts.append(Message(
     role="user",
     content=user_input
@@ -33,3 +33,5 @@ def run(user_input: str):
         role="tool",
         content=output
       ))
+
+      planner.record_execution(tool, args)

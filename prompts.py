@@ -1,7 +1,7 @@
-from contexts_result import ToolResult
+from contexts import ToolResult
 
 
-def _get_last_user(contexts: list):
+def _get_last_user(contexts: list) -> str:
   for c in reversed(contexts):  # c type : Message
     if c.role == "user":
       user_input = c.content
@@ -9,7 +9,7 @@ def _get_last_user(contexts: list):
   return user_input
 
 
-def _get_first_user(contexts: list):
+def _get_first_user(contexts: list) -> str:
   for c in contexts:  # c type : Message
     if c.role == "user":
       user_input = c.content
@@ -40,6 +40,7 @@ def _make_context_prompt(contexts: list) -> str:
                         Status: {"SUCCESS" if result.success else "FAILED"}
                         Output: {result.content}
                         Error: {result.error}
+                        Observation: {result.observation}
                         [End Tool Result]
                        """
   return context_str
@@ -90,6 +91,7 @@ def make_first_prompt(contexts: list, all_tools) -> str:
     }}
   }}
   6. 반드시 JSON만 출력한다.
+   - 문자열 내부 줄바꿈은 반드시 \\n으로 escape하고, 임의의 \\를 넣지 않는다.
   """
   return result
 
