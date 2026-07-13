@@ -1,28 +1,35 @@
-import re
-import json
 from llm import ask
-from prompts import make_first_prompt, summary_prompt
-from registry import get_tool, get_all_tools
+from prompts import summary_prompt
+from planner import Planner
+from contexts_result import Message
 
-tool_infos = get_all_tools()
+contexts = []
+planner = Planner()
 
-def clean_json_output(output: str) -> str:
-  return re.sub(r"^```json\s*|\s*```$", "", output.strip(), flags=re.DOTALL).strip()
+def run(user_input: str):
+  contexts.append(Message(
+    role="user",
+    content=user_input
+  ))
 
-def run(contexts: list):
-  prompt = make_first_prompt(contexts, tool_infos)
-  result = ask(prompt)
-  content = clean_json_output(result)
-  parsed = json.loads(content)
-  tool_name = parsed.get("tool")
-  tool = get_tool(tool_name)
+  while True:
+    action = planner.plan(contexts)  # 다음 계획 결정
+    print("Planner >>", action)
 
-  if tool_name is None or tool is None:
-    return ask(contexts)
+    if action is None:
+      final_prompt = summary_prompt(contexts)
+      response = ask(final_prompt)
+      contexts.append(Message(
+        role="assistant",
+        content=response
+      ))
+      return response
 
-  args = parsed.get("parameters", {})
-  output = tool.run(**args)
+    else:
+      tool, args = action
+      output = tool.run(**args)
 
-  prompt_summary = summary_prompt(contexts, output)
-  response = ask(prompt_summary)
-  return response
+      contexts.append(Message(
+        role="tool",
+        content=output
+      ))

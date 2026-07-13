@@ -1,4 +1,5 @@
 from extensions.base import BaseTool
+from contexts_result import ToolResult
 
 class ReadTool(BaseTool):
   name = "read"
@@ -8,6 +9,19 @@ class ReadTool(BaseTool):
   }
 
   def run(self, file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
-      result = file.read()
-    return result
+    try:
+      with open(file_path, 'r', encoding='utf-8') as file:
+        result = file.read()
+      return ToolResult(
+        name=self.name,
+        parameters={"file_path": file_path},
+        success=True,
+        content=result
+      )
+    except Exception as e:
+      return ToolResult(
+        name=self.name,
+        parameters={"file_path": file_path},
+        success=False,
+        error=f"파일을 읽는 중 오류가 발생했습니다: {str(e)}"
+      )
