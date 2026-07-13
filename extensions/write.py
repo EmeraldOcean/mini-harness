@@ -13,6 +13,9 @@ class WriteTool(BaseTool):
   사용자가 요청한 저장 작업이 수행되었다.
   동일한 내용을 다시 저장할 필요가 없다.
   """
+  inputs = {
+    "content": "latest_summary"
+  }
 
   def run(self, file_path, content):
     try:
@@ -32,3 +35,8 @@ class WriteTool(BaseTool):
         success=False,
         error=f"파일을 쓰는 중 오류가 발생했습니다: {str(e)}"
       )
+    
+  def prepare_args(self, args, contexts_manager):
+    if "content" not in args:
+      args["content"] = contexts_manager.resolve("latest_summary")
+    return args
