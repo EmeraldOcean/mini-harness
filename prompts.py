@@ -41,6 +41,7 @@ def _make_context_prompt(contexts: list) -> str:
                         Output: {result.content}
                         Error: {result.error}
                         Observation: {result.observation}
+                        Artifact Type: {result.artifact_type}
                         [End Tool Result]
                        """
   return context_str
@@ -69,20 +70,24 @@ def make_first_prompt(contexts: list, all_tools) -> str:
   {tool_prompt}
 
   # Instructions
-  1. 현재 목표가 이미 완료되었는지 먼저 판단한다.
-  2. Current State에는 이전 대화와 Tool 실행 결과가 포함되어 있다.
-  Tool Result의 output은 실제 Tool 실행 결과 데이터이다.
-  3. Tool Result를 확인하여:
-   - 이미 필요한 정보를 확보했다면 같은 Tool을 다시 호출하지 않는다.
-   - 확보한 정보를 이용해 다음 단계가 필요하면 다음 Tool을 호출한다.
-  4. 현재 목표가 완료되어 더 이상 Tool이 필요하지 않다면
+  1. 사용자의 전체 목표를 기준으로 판단한다.
+  2. 현재 단계가 목표의 일부만 완료된 상태라면 다음 Tool을 선택한다.
+  3. 최종 결과물이 필요한 경우 반드시 마지막 출력 저장/전달 단계까지 수행한다.
+  4. Current State에는 이전 대화와 Tool 실행 결과가 포함되어 있다.
+    - Tool Result의 output은 실제 Tool 실행 결과 데이터이다.
+  5. Tool 실행이 실패한 경우:
+    - error 내용을 확인한다.
+    - retryable이면 동일 Tool 재시도를 고려한다.
+    - retry 불가능하면 다른 해결 방법을 찾거나 사용자에게 요청한다.
+  6. 실패한 Tool 결과를 성공한 것으로 간주하지 않는다.
+  7. 현재 목표가 완료되어 더 이상 Tool이 필요하지 않다면
     - 형식:
       {{
       "tool": null,
       "parameters": {{}}
     }}
     를 반환한다.
-  5. 완료되지 않았다면 목표 달성을 위한 가장 적합한 다음 Tool 하나만 선택한다.
+  8. 완료되지 않았다면 목표 달성을 위한 가장 적합한 다음 Tool 하나만 선택한다.
   - 형식:
   {{
     "tool": "도구 이름",
@@ -90,7 +95,7 @@ def make_first_prompt(contexts: list, all_tools) -> str:
       "파라미터명": "값"
     }}
   }}
-  6. 반드시 JSON만 출력한다.
+  9. 반드시 JSON만 출력한다.
    - 문자열 내부 줄바꿈은 반드시 \\n으로 escape하고, 임의의 \\를 넣지 않는다.
   """
   return result

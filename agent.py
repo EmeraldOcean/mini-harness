@@ -5,6 +5,8 @@ from contexts import Message, ContextManager
 
 context_manager = ContextManager()
 planner = Planner()
+MAX_RETRY = 3  # 최대 재시도 횟수
+retry_count = 0  # 현재 재시도 횟수
 
 def run(user_input: str) -> str:
   context_manager.add(Message(
@@ -27,12 +29,22 @@ def run(user_input: str) -> str:
 
     else:
       tool, args = action
-      args = tool.prepare_args(args, context_manager)
-      output = tool.run(**args)
+      retry_count = 0
+
+      while retry_count < MAX_RETRY:
+        args = tool.prepare_args(args, context_manager)
+        output = tool.run(**args)
+
+        if output.success:
+          break
+        retry_count += 1
+
+        print(f"Tool execution failed. Retry {retry_count}/{MAX_RETRY}. Error: {output.error}")
+
+        if not tool.retryable:
+          break
 
       context_manager.add(Message(
         role="tool",
         content=output
       ))
-
-      planner.record_execution(tool, args)

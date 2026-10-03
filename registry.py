@@ -1,8 +1,9 @@
-from extensions import ReadTool, WriteTool
+from extensions import ReadTool, WriteTool, SummaryTool
 
 tools = {
   ReadTool().name: ReadTool(),
   WriteTool().name: WriteTool(),
+  SummaryTool().name: SummaryTool()
 }
 
 def register(name, func):
